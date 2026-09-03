@@ -1,0 +1,4 @@
+"crisis","primero","fecha_primero","segundo","tercero","ultimo","fecha_ultimo","dispersion_sesiones_panel","dispersion_dias_naturales","n_mercados_con_fecha","n_antes_del_pico"
+"crisis2008","000001.SS","2008-01-22","^AXJO","^TWII","^BSESN","2008-10-27",130,279,19,0
+"covid","000001.SS","2019-07-16","FTSEMIB.MI","^AEX","^HSI","2020-03-12",96,240,19,1
+"crisis2022","^KS11","2022-01-24","^BSESN","^N225","^MXX","2022-05-10",37,106,19,0

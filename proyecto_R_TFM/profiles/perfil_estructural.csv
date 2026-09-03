@@ -1,0 +1,20 @@
+indice,nombre,pais,desarrollo,region
+^GSPC,S&P 500,EE. UU.,Desarrollado,America del Norte
+^GSPTSE,S&P/TSX,Canada,Desarrollado,America del Norte
+^GDAXI,DAX,Alemania,Desarrollado,Europa
+^FCHI,CAC 40,Francia,Desarrollado,Europa
+^FTSE,FTSE 100,Reino Unido,Desarrollado,Europa
+^IBEX,IBEX 35,Espana,Desarrollado,Europa
+FTSEMIB.MI,FTSE MIB,Italia,Desarrollado,Europa
+^SSMI,SMI,Suiza,Desarrollado,Europa
+^AEX,AEX,Paises Bajos,Desarrollado,Europa
+^N225,Nikkei 225,Japon,Desarrollado,Asia oriental
+^HSI,Hang Seng,Hong Kong,Desarrollado,Asia oriental
+^KS11,KOSPI,Corea del Sur,Desarrollado,Asia oriental
+^AXJO,S&P/ASX 200,Australia,Desarrollado,Oceania
+^BVSP,Bovespa,Brasil,Emergente,America Latina
+^BSESN,Sensex,India,Emergente,Asia meridional
+^MXX,IPC,Mexico,Emergente,America Latina
+000001.SS,Shanghai Composite,China,Emergente,Asia oriental
+^TWII,TAIEX,Taiwan,Emergente,Asia oriental
+^JKSE,Jakarta Composite,Indonesia,Emergente,Asia sudoriental

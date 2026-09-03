@@ -1,0 +1,4 @@
+"crisis","n_mercados","n_mismo_grupo","pct_mismo_grupo","rand_ajustado_A_vs_B","silueta_A","silueta_B","grupo_max_corr_A","grupo_max_corr_B","sinc_A_n","sinc_A_desarrollados","sinc_A_europeos","sinc_B_n","sinc_B_desarrollados","sinc_B_europeos"
+"covid",19,12,63.2,0.219,0.324,0.381,1,3,8,7,6,11,9,6
+"crisis2008",19,19,100,1,0.398,0.401,1,1,2,2,2,2,2,2
+"crisis2022",19,14,73.7,0.412,0.319,0.323,3,3,8,8,6,9,8,5

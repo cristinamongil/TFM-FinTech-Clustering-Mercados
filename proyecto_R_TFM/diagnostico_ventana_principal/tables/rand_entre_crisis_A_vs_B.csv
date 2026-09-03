@@ -1,0 +1,4 @@
+"crisis_a","crisis_b","rand_ajustado_A","n_comunes_A","rand_ajustado_B","n_comunes_B"
+"covid","crisis2008",0.073,19,0.011,19
+"covid","crisis2022",0.054,19,-0.045,19
+"crisis2008","crisis2022",0.004,19,0.073,19
