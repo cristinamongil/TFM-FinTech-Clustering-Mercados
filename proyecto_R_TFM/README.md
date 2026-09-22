@@ -37,6 +37,7 @@ TFM-crisis-clustering/
 ├── plots.R                       figuras
 ├── exportResults.R               guardado trazable de tablas y figuras
 ├── main_TFM.R                    SCRIPT PRINCIPAL (se ejecuta de arriba abajo)
+├── seedCheck.R                   comprobación de robustez ante la semilla (3.8, opcional)
 ├── basedata/                     datos crudos descargados de Yahoo (un CSV por ticker)
 ├── data/                         objetos intermedios procesados (.rds)
 ├── profiles/                     perfil económico externo (CSV a cumplimentar)
@@ -85,6 +86,15 @@ bloque de la metodología del capítulo 3, cuya función se indica arriba.
   figuras con nombres trazables.
 - **main_TFM.R** — orquesta el análisis completo en quince bloques
   numerados.
+- **seedCheck.R** — comprobación de robustez de la inicialización de
+  K-Means (3.8): repite el agrupamiento de la fase aguda de cada crisis
+  con diez semillas alternativas a la del análisis, manteniendo el mismo
+  k y el mismo `nstart`, y compara cada partición con la del análisis
+  mediante el índice de Rand ajustado y la suma de cuadrados intragrupo.
+  No forma parte de los quince bloques de `main_TFM.R`. Es autosuficiente:
+  si `K_COMUN` no está definido en la sesión (por ejemplo, al ejecutarlo
+  en una sesión de R recién abierta), lo recalcula él mismo a partir de
+  `data/variables_std.rds`, igual que hace `main_TFM.R` en el bloque 10.
 
 ## Diferencia entre `basedata/`, `data/` y `resultados/`
 
@@ -115,14 +125,20 @@ alineación, serie de referencia, ventanas, rendimientos, variables,
 estandarización, selección de k, K-Means, contraste, interpretación,
 complementarios y exportación.
 
+3. (Opcional) Ejecutar `source("seedCheck.R")` para repetir la
+   comprobación de robustez ante la semilla citada en el apartado 3.8.
+   Solo necesita que `data/variables_std.rds` exista (es decir, haber
+   corrido `main_TFM.R` al menos una vez antes); no hace falta que sea en
+   la misma sesión de R, porque el propio script carga lo que le falte.
+
 ## Archivos que se generan
 
 - En `basedata/`: un CSV por ticker y la tabla de equivalencia.
 - En `data/`: los objetos intermedios `.rds`.
 - En `resultados/tablas/`: disponibilidad histórica, ventanas, correlación
   entre variables, codo y silueta, centroides, asignaciones, contraste de
-  hipótesis, cambio entre particiones, migración, separabilidad y
-  reacción-recuperación.
+  hipótesis, cambio entre particiones, migración, separabilidad,
+  reacción-recuperación y comprobación de semillas (`seedCheck.R`).
 - En `resultados/figuras/`: ventanas temporales (Figura 3.3), codo y
   silueta (Figura 3.4), precios relativos, mapas de clusters por crisis y
   migración entre fases.
