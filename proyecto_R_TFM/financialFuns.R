@@ -36,7 +36,7 @@ rendimientoAcumulado <- function(precios) {
 # ---------------------------------------------------------------------
 # rendimientoAnualizado()
 # Rentabilidad anualizada a partir de la rentabilidad media diaria del
-# tramo (Word, Tabla 3.4). Robusta a la longitud de la fase.
+# tramo (memoria, Tabla 3.4). Robusta a la longitud de la fase.
 # Entradas: rendimientos (log diarios), factor_anual (config)
 # Salida:   escalar (NA si no hay rendimientos validos)
 # ---------------------------------------------------------------------

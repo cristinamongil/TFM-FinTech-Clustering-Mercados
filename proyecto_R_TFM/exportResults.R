@@ -5,7 +5,7 @@
 #
 # Capa de salida. Crea los directorios de resultados, normaliza los
 # nombres de archivo y guarda tablas (CSV) y figuras (PNG) con nombres
-# trazables y coherentes con el Word (p.ej. tabla_3_1_indices.csv,
+# trazables y coherentes con la memoria (p.ej. tabla_3_1_indices.csv,
 # figura_3_4_codo_silueta.png).
 
 # ---------------------------------------------------------------------
@@ -25,7 +25,7 @@ asegurarDirectorios <- function() {
 # ---------------------------------------------------------------------
 nombreArchivoSeguro <- function(nombre) {
   nombre <- tolower(nombre)
-  nombre <- chartr("aeiouñ", "aeioun", nombre)
+  nombre <- iconv(nombre, from = "UTF-8", to = "ASCII//TRANSLIT")
   nombre <- gsub("[^a-z0-9._-]+", "_", nombre)
   nombre
 }
@@ -53,7 +53,8 @@ guardarTabla <- function(x, nombre, ruta = RUTA_TABLAS) {
 guardarFigura <- function(p, nombre, ancho = 8, alto = 5, ruta = RUTA_FIGURAS) {
   if (!dir.exists(ruta)) dir.create(ruta, recursive = TRUE)
   archivo <- file.path(ruta, paste0(nombreArchivoSeguro(nombre), ".png"))
-  ggplot2::ggsave(archivo, plot = p, width = ancho, height = alto, dpi = 150)
+  ggplot2::ggsave(archivo, plot = p, width = ancho, height = alto, dpi = 150,
+                  bg = "white")
   message("  figura guardada: ", archivo)
   invisible(archivo)
 }

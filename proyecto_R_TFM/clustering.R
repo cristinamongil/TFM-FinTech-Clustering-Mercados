@@ -3,7 +3,7 @@
 #
 # Autora: Cristina Mongil de la Cal
 #
-# Seleccion del numero de grupos y agrupamiento con K-Means (Word 3.8). La
+# Seleccion del numero de grupos y agrupamiento con K-Means (memoria 3.8). La
 # seleccion de k combina el metodo del codo (suma de cuadrados intragrupo)
 # y el coeficiente medio de silueta en las tres crisis, y propone un k
 # comun. K-Means se ejecuta con semilla fija y multiples reinicios sobre
@@ -110,11 +110,14 @@ describirCentroides <- function(centroides) {
 # Establece la correspondencia entre los grupos de dos particiones de los
 # MISMOS mercados atendiendo a la coincidencia de sus miembros: se prueban
 # todas las correspondencias posibles entre los k grupos y se elige la que
-# deja el mayor numero de mercados en el mismo grupo. Es determinista y no
-# utiliza distancias entre centroides, que no serian comparables porque
-# cada fase se estandariza por separado. Permite seguir los grupos entre
-# fases evitando que una permutacion nominal de las etiquetas de K-Means
-# se contabilice como una migracion.
+# deja el mayor numero de mercados en el mismo grupo. Si dos o mas
+# correspondencias empatan, se elige la que maximiza la suma de los indices
+# de Jaccard entre los grupos emparejados (Hennig, 2007), que tiene en
+# cuenta el tamano de cada grupo y no solo el numero de coincidencias. Es
+# determinista y no utiliza distancias entre centroides, que no serian
+# comparables porque cada fase se estandariza por separado. Permite seguir
+# los grupos entre fases evitando que una permutacion nominal de las
+# etiquetas de K-Means se contabilice como una migracion.
 # Entradas: etiquetas_ref, etiquetas_obj (vectores con nombres de indice)
 # Salida:   vector de etiquetas objetivo reetiquetadas
 # ---------------------------------------------------------------------
@@ -126,10 +129,37 @@ alinearEtiquetas <- function(etiquetas_ref, etiquetas_obj) {
   coincidencias <- vapply(permutaciones, function(p) {
     sum(p[etiquetas_obj[comunes]] == etiquetas_ref[comunes])
   }, numeric(1))
-  mapa <- permutaciones[[which.max(coincidencias)]]
+  mejores <- which(coincidencias == max(coincidencias))
+  if (length(mejores) > 1) {
+    jac <- vapply(permutaciones[mejores], function(p) {
+      jaccardEmparejamiento(p, etiquetas_ref[comunes], etiquetas_obj[comunes])
+    }, numeric(1))
+    message("  Empate en la correspondencia de grupos (", max(coincidencias),
+            " mercados coincidentes en ", length(mejores),
+            " correspondencias): se resuelve por el indice de Jaccard (",
+            paste(round(jac, 3), collapse = " / "), ").")
+    mejores <- mejores[which.max(jac)]
+  }
+  mapa <- permutaciones[[mejores[1]]]
   nuevas <- etiquetas_obj
   for (g in seq_len(k)) nuevas[etiquetas_obj == g] <- mapa[g]
   nuevas
+}
+
+# ---------------------------------------------------------------------
+# jaccardEmparejamiento()
+# Suma de los indices de Jaccard |A n B| / |A u B| entre cada grupo de la
+# particion objetivo y el grupo de referencia con el que se empareja segun
+# la correspondencia p (el grupo g del objetivo pasa a ser el p[g]).
+# Entradas: p (permutacion), ref y obj (etiquetas de los mismos mercados)
+# Salida:   escalar (mayor valor = grupos emparejados mas parecidos)
+# ---------------------------------------------------------------------
+jaccardEmparejamiento <- function(p, ref, obj) {
+  sum(vapply(seq_along(p), function(g) {
+    a <- names(obj)[obj == g]; b <- names(ref)[ref == p[g]]
+    u <- length(union(a, b))
+    if (u == 0) 0 else length(intersect(a, b)) / u
+  }, numeric(1)))
 }
 
 # ---------------------------------------------------------------------

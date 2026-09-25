@@ -17,23 +17,10 @@
 COLUMNAS_PERFIL <- c("desarrollo", "region")
 
 # ---------------------------------------------------------------------
-# plantillaPerfil()
-# Devuelve una plantilla vacia del perfil con una fila por indice y las
-# columnas esperadas sin cumplimentar. Sirve para generar el CSV que la
-# autora debe rellenar con fuentes externas.
-# ---------------------------------------------------------------------
-plantillaPerfil <- function(info = INFO_INDICES) {
-  plantilla <- data.frame(indice = info$ticker, nombre = info$nombre,
-                          desarrollo = info$desarrollo, stringsAsFactors = FALSE)
-  for (col in setdiff(COLUMNAS_PERFIL, "desarrollo")) plantilla[[col]] <- NA_character_
-  plantilla
-}
-
-# ---------------------------------------------------------------------
 # cargarPerfil()
 # Lee el CSV del perfil desde profiles/. Devuelve NULL (con aviso) si el
 # archivo no existe o esta vacio, y avisa si faltan columnas o si todos los
-# valores sectoriales estan sin cumplimentar.
+# valores estructurales estan sin cumplimentar.
 # Entradas: ruta
 # Salida:   data.frame del perfil o NULL
 # ---------------------------------------------------------------------

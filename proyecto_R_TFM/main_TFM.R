@@ -7,27 +7,28 @@
 #
 # Script principal. Se ejecuta de arriba abajo (Source). Reproduce el flujo
 # completo de la metodologia del capitulo 3, desde la obtencion de los datos
-# hasta la interpretacion economica y los analisis complementarios. Cada
-# bloque indica que hace y que objetos principales genera.
+# hasta la interpretacion economica, los analisis complementarios y la
+# comprobacion de semillas. Cada bloque indica que hace y que objetos
+# principales genera.
 
 # 1. Preparacion del entorno
 # Carga librerias, configuracion y modulos de funciones, y declara las
-# hipotesis ANTES de observar los grupos (blinda el contraste). Genera:
-# HIPOTESIS.
+# expectativas ANTES de observar los grupos, para que su evaluacion no se
+# adapte a los resultados (memoria 3.7). Genera: EXPECTATIVAS.
 source("init.R")
 
-HIPOTESIS <- list(
+EXPECTATIVAS <- list(
   crisis2008 = list(
     enunciado = "Mayor sincronia en el nucleo de mercados desarrollados.",
-    contraste = "composicion_estructural"),
+    evaluacion = "composicion_estructural"),
   covid = list(
-    enunciado = "Shock sincronizado: baja separabilidad y correlaciones altas generalizadas.",
-    contraste = "separabilidad"),
+    enunciado = "Comportamiento generalizado y baja separabilidad.",
+    evaluacion = "separabilidad"),
   crisis2022 = list(
-    enunciado = "Correspondencia estructural debil: el eje no se alinea con el desarrollo ni la region.",
-    contraste = "composicion_estructural")
+    enunciado = "Correspondencia debil con el nivel de desarrollo y la region.",
+    evaluacion = "composicion_estructural")
 )
-saveRDS(HIPOTESIS, file.path(RUTA_DATOS, "hipotesis.rds"))
+saveRDS(EXPECTATIVAS, file.path(RUTA_DATOS, "expectativas.rds"))
 
 # 2. Descarga y almacenamiento de los datos
 # Descarga (o reutiliza de basedata/) los 19 indices y los 3 activos de
@@ -52,7 +53,7 @@ retirados <- setdiff(TICKERS_INDICES, tickers_validos)
 if (length(retirados) > 0) {
   message("Indices que no cubren 2008: ", paste(retirados, collapse = ", "))
   if (!PERMITIR_EXCLUSION_AUTOMATICA) {
-    stop("Excluir estos indices altera la muestra de 19 definida en el Word. ",
+    stop("Excluir estos indices altera la muestra de 19 definida en la memoria. ",
          "Revisa la tabla de disponibilidad y, si aceptas la exclusion, ",
          "pon PERMITIR_EXCLUSION_AUTOMATICA <- TRUE en config.R.")
   }
@@ -86,6 +87,12 @@ saveRDS(referencia, file.path(RUTA_DATOS, "referencia.rds"))
 ventanas <- definirVentanas(referencia)
 saveRDS(ventanas, file.path(RUTA_DATOS, "ventanas.rds"))
 guardarTabla(ventanas, "tabla_3_3_ventanas")
+
+# Con las ventanas ya definidas se completa la tabla de disponibilidad
+# (columna cubre_ventanas: si cada indice cubre el inicio de la primera
+# ventana de crisis).
+disponibilidad <- comprobarDisponibilidad(series_indices_limpias, ventanas = ventanas)
+guardarTabla(disponibilidad, "tabla_disponibilidad_historica")
 
 # 7. Calculo de rendimientos logaritmicos
 # Rendimientos logaritmicos diarios del panel de indices. Genera:
@@ -146,31 +153,28 @@ asignaciones <- do.call(rbind, lapply(names(res_crisis), function(cr) {
 }))
 guardarTabla(asignaciones, "tabla_asignaciones_cluster")
 
-# 12. Contraste de las hipotesis
-# La COVID se evalua por separabilidad; 2008 y 2022, de forma descriptiva
-# a partir de la composicion estructural de cada grupo (bloque 13). El
-# Rand ajustado se reserva para comparar particiones ENTRE crisis
-# (bloque 14). Genera: tabla de contraste.
+# 12. Evaluacion de las expectativas
+# Evaluacion descriptiva, sin umbrales ni contraste estadistico formal: la
+# COVID por la separabilidad de la particion (silueta media) y el reparto
+# de los mercados entre grupos; 2008 y 2022 a partir de la composicion
+# estructural de cada grupo (bloque 13). El Rand ajustado se reserva para
+# comparar particiones ENTRE crisis (bloque 14). Genera: tabla de evaluacion.
 perfil <- cargarPerfil()
-contraste <- list()
+evaluacion <- list()
 for (cr in names(res_crisis)) {
   e <- res_crisis[[cr]]$etiquetas
   m <- matrizCluster(variables_std, cr, "durante")
-  if (HIPOTESIS[[cr]]$contraste == "separabilidad") {
-    r <- contrastarSeparabilidad(m, e)
-    contraste[[cr]] <- data.frame(crisis = cr, tipo = "separabilidad",
-      estadistico = round(r$silueta_media, 3), veredicto = r$veredicto,
-      stringsAsFactors = FALSE)
-  } else {
-    contraste[[cr]] <- data.frame(crisis = cr, tipo = "composicion_estructural",
-      estadistico = round(siluetaMedia(m, e), 3),
-      veredicto = "evaluacion descriptiva: vease la composicion estructural",
-      stringsAsFactors = FALSE)
-  }
+  r <- evaluarSeparabilidad(m, e)
+  evaluacion[[cr]] <- data.frame(crisis = cr,
+    expectativa = EXPECTATIVAS[[cr]]$enunciado,
+    criterio = EXPECTATIVAS[[cr]]$evaluacion,
+    silueta_media = round(r$silueta_media, 3),
+    tamanos_grupos = r$tamanos,
+    stringsAsFactors = FALSE)
 }
-contraste <- do.call(rbind, contraste)
-guardarTabla(contraste, "tabla_contraste_hipotesis")
-print(contraste)
+evaluacion <- do.call(rbind, evaluacion)
+guardarTabla(evaluacion, "tabla_evaluacion_expectativas")
+print(evaluacion)
 
 # 13. Caracterizacion estructural de los clusters
 # Cruce de los grupos con el perfil estructural externo (nivel de
@@ -204,7 +208,7 @@ if (!is.null(perfil)) {
           ARCHIVO_PERFIL, ".")
 }
 
-# 14. Analisis complementarios y de robustez
+# 14. Analisis complementarios
 # Cambio entre particiones, migracion entre fases, separabilidad y
 # reaccion-recuperacion. Genera: tablas y figura de migracion.
 tabla_cambio        <- cambioEntreParticiones(res_crisis)
@@ -216,6 +220,7 @@ guardarTabla(tabla_cambio,        "tabla_cambio_entre_particiones")
 guardarTabla(tabla_migracion,     "tabla_migracion_entre_fases")
 guardarTabla(tabla_separabilidad, "tabla_separabilidad")
 guardarTabla(tabla_reaccion,      "tabla_reaccion_recuperacion")
+guardarTabla(resumenReaccionRecuperacion(tabla_reaccion), "tabla_resumen_reaccion_recuperacion")
 guardarFigura(graficarMigracion(tabla_migracion), "figura_migracion_fases")
 
 # 15. Activos de contexto durante las fases agudas
@@ -240,5 +245,11 @@ for (cr in names(res_crisis)) {
   guardarFigura(graficarMapaClusters(m, res_crisis[[cr]]$etiquetas, cr),
                 paste0("figura_clusters_", cr))
 }
+
+# 17. Comprobacion de semillas
+# Repite el agrupamiento de la fase aguda con diez semillas alternativas y
+# lo compara con el obtenido con la semilla del analisis (memoria 3.8).
+# Genera: comprobacion_semillas.
+source("seedCheck.R")
 
 message("main_TFM.R completado. Tablas en ", RUTA_TABLAS, " y figuras en ", RUTA_FIGURAS, ".")

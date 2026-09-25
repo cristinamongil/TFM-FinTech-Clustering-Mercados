@@ -39,7 +39,7 @@ source("features.R")          # variables de comportamiento y estandarizacion
 # Modulos auxiliares, uno por bloque metodologico del capitulo 3.
 source("crisisWindows.R")     # 3.3  definicion de ventanas
 source("clustering.R")        # 3.8  seleccion de k y K-Means
-source("hypothesisContrast.R")# 3.9  contraste de hipotesis
+source("expectations.R")      # 3.9  evaluacion de las expectativas y Rand ajustado
 source("structuralProfile.R")   # 3.10 perfil estructural externo y caracterizacion
 source("complementary.R")     # 3.11 analisis complementarios
 source("plots.R")             # figuras

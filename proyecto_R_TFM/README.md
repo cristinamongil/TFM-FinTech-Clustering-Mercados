@@ -1,22 +1,17 @@
-# TFM — Clustering de mercados ante crisis de distinta naturaleza
+# TFM — Clustering de mercados bursátiles ante crisis de distinta naturaleza
 
 Implementación en R del análisis empírico del Trabajo Fin de Máster
-*"Analítica de datos en series temporales financieras"* (Cristina Mongil de
-la Cal, Máster en Tecnologías del Sector Financiero: FinTech).
+*«Análisis comparativo del comportamiento de los mercados bursátiles ante
+crisis mediante técnicas de clustering»* (Cristina Mongil de la Cal, Máster
+Universitario en Tecnologías del Sector Financiero: FinTech, UC3M, 2025-2026).
 
-El proyecto identifica, mediante K-Means, los patrones de agrupación de un
-conjunto de índices bursátiles internacionales ante tres crisis de
-distinta naturaleza (financiera de 2008, COVID-19 de 2020 y
-geopolítico-energética de 2022) y los interpreta económicamente. Sigue el
-marco CRISP-DM y el flujo de la metodología del capítulo 3 de la memoria:
-hipótesis declaradas de antemano → variables de comportamiento → K-Means →
-contraste → interpretación → análisis complementarios.
-
-## Finalidad
-
-Reproducir de forma ordenada y auditable todo el análisis descrito en la
-memoria, desde la descarga de los datos hasta las tablas y figuras que se
-incorporan al TFM.
+El proyecto agrupa mediante K-Means 19 índices bursátiles internacionales
+en la fase aguda de tres crisis de distinta naturaleza (financiera de 2008,
+COVID-19 de 2020 y geopolítico-energética de 2022) y compara las
+agrupaciones obtenidas. Sigue el marco CRISP-DM y el flujo del capítulo 3
+de la memoria: expectativas formuladas de antemano → variables de
+comportamiento → K-Means → evaluación de las expectativas → caracterización
+estructural → análisis complementarios.
 
 ## Estructura del proyecto
 
@@ -24,93 +19,83 @@ incorporan al TFM.
 TFM-crisis-clustering/
 ├── TFM-crisis-clustering.Rproj   proyecto de RStudio
 ├── README.md
+├── main_TFM.R                    SCRIPT PRINCIPAL (se ejecuta de arriba abajo)
 ├── init.R                        librerías, configuración y carga de módulos
 ├── config.R                      parámetros y decisiones metodológicas
 ├── ExtraccionDatos.R             descarga, caché, limpieza, alineación y disponibilidad
 ├── financialFuns.R               rentabilidades y precios relativos
-├── features.R                    variables de comportamiento y estandarización
+├── features.R                    variables de comportamiento y estandarización (3.5)
 ├── crisisWindows.R               serie de referencia y ventanas pico-a-valle (3.3)
-├── clustering.R                  selección de k y K-Means (3.8)
-├── hypothesisContrast.R          contraste de hipótesis: Rand ajustado y separabilidad (3.9)
+├── clustering.R                  selección de k, K-Means y alineación de etiquetas (3.8, 3.11)
+├── expectations.R                evaluación de las expectativas y Rand ajustado (3.9)
 ├── structuralProfile.R           perfil estructural externo y caracterización (3.10)
 ├── complementary.R               análisis complementarios (3.11)
+├── seedCheck.R                   comprobación con diez semillas alternativas (3.8)
 ├── plots.R                       figuras
 ├── exportResults.R               guardado trazable de tablas y figuras
-├── main_TFM.R                    SCRIPT PRINCIPAL (se ejecuta de arriba abajo)
-├── seedCheck.R                   comprobación de robustez ante la semilla (3.8, opcional)
-├── basedata/                     datos crudos descargados de Yahoo (un CSV por ticker)
+├── basedata/                     datos descargados de Yahoo Finance (un CSV por ticker)
 ├── data/                         objetos intermedios procesados (.rds)
-├── profiles/                     perfil económico externo (CSV a cumplimentar)
+├── profiles/                     perfil estructural de cada mercado (desarrollo y región)
 └── resultados/
     ├── tablas/                   tablas de salida (.csv)
     └── figuras/                  figuras de salida (.png)
 ```
 
-`init.R`, `config.R` y los tres archivos de núcleo (`ExtraccionDatos.R`,
-`financialFuns.R`, `features.R`) siguen la filosofía del proyecto de clase.
-El resto de archivos son módulos auxiliares, cada uno correspondiente a un
-bloque de la metodología del capítulo 3, cuya función se indica arriba.
-
 ## Función de cada archivo
 
+- **main_TFM.R** — orquesta el análisis completo en diecisiete bloques
+  numerados, desde la preparación del entorno hasta la comprobación de
+  semillas.
 - **init.R** — comprueba e instala los paquetes que falten, carga
   `config.R` y hace `source()` de los módulos de funciones. No ejecuta el
   análisis.
 - **config.R** — universo de 19 índices y 3 activos de contexto, fechas de
-  descarga, intervalos de las tres crisis, duración de las fases, ventana
-  móvil, factor de anualización, rango de k, semilla, número de reinicios,
-  umbrales de contraste y rutas. No realiza cálculos.
-- **ExtraccionDatos.R** — descarga con `quantmod`, cachea un CSV auditable
-  por ticker en `basedata/`, limpia y alinea las series y comprueba su
-  disponibilidad histórica.
+  descarga, intervalos de búsqueda de las tres crisis, duración de las
+  fases, ventana móvil de tres meses naturales, factor de anualización,
+  rango de k, semilla, número de reinicios, umbrales del análisis de
+  reacción y recuperación y rutas. No realiza cálculos.
+- **ExtraccionDatos.R** — descarga con `quantmod`, guarda un CSV auditable
+  por ticker en `basedata/`, limpia y alinea las series en fechas comunes
+  de negociación y comprueba su disponibilidad histórica.
 - **financialFuns.R** — rentabilidades logarítmicas, rentabilidad
-  acumulada y anualizada y precios normalizados.
-- **features.R** — volatilidad realizada, drawdown máximo y correlación
-  media móvil; resumen por fase; construcción del conjunto por índice,
-  crisis y fase; y estandarización z-score dentro de cada conjunto que se
-  agrupa.
-- **crisisWindows.R** — serie de referencia equiponderada y delimitación
-  de las ventanas antes/durante/después por el criterio pico-a-valle.
-- **clustering.R** — selección de k por codo y silueta, K-Means con
-  semilla y reinicios, y descripción de los centroides.
-- **hypothesisContrast.R** — índice de Rand ajustado (implementado en R
-  base), empleado para comparar particiones entre crisis, y contraste de
-  separabilidad.
-- **structuralProfile.R** — carga y validación del perfil estructural
-  externo (nivel de desarrollo y región) y su cruce con las etiquetas de
-  cluster.
+  anualizada y precios normalizados.
+- **features.R** — volatilidad realizada y correlación media sobre una
+  ventana móvil retrospectiva de tres meses naturales, drawdown máximo,
+  resumen por fase y estandarización (z-score) dentro de cada conjunto que
+  se agrupa.
+- **crisisWindows.R** — serie de referencia equiponderada y delimitación de
+  las fases anterior, aguda y posterior por el criterio pico-a-valle.
+- **clustering.R** — selección de k por codo y silueta, K-Means con semilla
+  fija y 50 reinicios, descripción de los centroides y alineación de
+  etiquetas entre fases (se prueban las seis correspondencias posibles y,
+  en caso de empate, se elige la de mayor suma de índices de Jaccard).
+- **expectations.R** — evaluación descriptiva de las expectativas (silueta
+  media y tamaño de los grupos) e índice de Rand ajustado para comparar las
+  particiones de crisis distintas.
+- **structuralProfile.R** — carga del perfil estructural externo (nivel de
+  desarrollo según FTSE Russell y región según el esquema M49 de Naciones
+  Unidas) y cruce con los grupos.
 - **complementary.R** — cambio entre particiones, migración entre fases,
-  separabilidad y reacción-recuperación.
+  separabilidad, reacción y recuperación (con su resumen por crisis) y
+  comportamiento de los activos de contexto.
+- **seedCheck.R** — repite el agrupamiento de la fase aguda con diez
+  semillas alternativas y lo compara con el del análisis. Se ejecuta al
+  final de `main_TFM.R`, aunque también puede lanzarse por separado.
 - **plots.R** — figuras del proyecto con `ggplot2`.
 - **exportResults.R** — creación de directorios y guardado de tablas y
   figuras con nombres trazables.
-- **main_TFM.R** — orquesta el análisis completo en quince bloques
-  numerados.
-- **seedCheck.R** — comprobación de robustez de la inicialización de
-  K-Means (3.8): repite el agrupamiento de la fase aguda de cada crisis
-  con diez semillas alternativas a la del análisis, manteniendo el mismo
-  k y el mismo `nstart`, y compara cada partición con la del análisis
-  mediante el índice de Rand ajustado y la suma de cuadrados intragrupo.
-  No forma parte de los quince bloques de `main_TFM.R`. Es autosuficiente:
-  si `K_COMUN` no está definido en la sesión (por ejemplo, al ejecutarlo
-  en una sesión de R recién abierta), lo recalcula él mismo a partir de
-  `data/variables_std.rds`, igual que hace `main_TFM.R` en el bloque 10.
 
 ## Diferencia entre `basedata/`, `data/` y `resultados/`
 
 - **basedata/** — datos originales tal como se descargan de Yahoo Finance,
-  un CSV por ticker (con las columnas OHLC, cierre ajustado y volumen para
-  poder auditar la descarga) y una tabla de equivalencia
-  `_equivalencia_tickers.csv` entre el ticker y el nombre de archivo.
-- **data/** — objetos intermedios del análisis en formato `.rds` (panel de
-  precios, rendimientos, ventanas, variables, etiquetas, centroides…), que
-  conservan los tipos de R y evitan recomputar.
-- **resultados/** — únicamente salidas listas para revisar o incorporar al
-  TFM: `tablas/` (CSV) y `figuras/` (PNG).
+  un CSV por ticker, y la tabla `_equivalencia_tickers.csv` entre el ticker
+  y el nombre de archivo.
+- **data/** — objetos intermedios del análisis en formato `.rds`.
+- **resultados/** — salidas finales: `tablas/` (CSV) y `figuras/` (PNG).
 
 ## Paquetes necesarios
 
-`quantmod`, `zoo`, `cluster` (viene con R base), `ggplot2` y `reshape2`.
+`quantmod`, `zoo`, `cluster` (incluido en R), `ggplot2` y `reshape2`.
 `init.R` instala automáticamente los que falten.
 
 ## Cómo ejecutar
@@ -119,54 +104,48 @@ bloque de la metodología del capítulo 3, cuya función se indica arriba.
    trabajo en la raíz del proyecto; todas las rutas son relativas).
 2. Abrir `main_TFM.R` y ejecutarlo de arriba abajo con *Source*.
 
-`main_TFM.R` comienza con `source("init.R")` y a continuación recorre los
-quince bloques: preparación, descarga, disponibilidad, limpieza y
-alineación, serie de referencia, ventanas, rendimientos, variables,
-estandarización, selección de k, K-Means, contraste, interpretación,
-complementarios y exportación.
+Los datos se leen de `basedata/`, por lo que la ejecución reproduce los
+resultados de la memoria sin necesidad de volver a descargarlos. Para
+forzar una nueva descarga, borrar el CSV correspondiente o llamar a
+`descargarUniverso(tickers, refrescar = TRUE)`; en ese caso Yahoo Finance
+puede haber revisado algún dato histórico y los resultados podrían variar
+ligeramente.
 
-3. (Opcional) Ejecutar `source("seedCheck.R")` para repetir la
-   comprobación de robustez ante la semilla citada en el apartado 3.8.
-   Solo necesita que `data/variables_std.rds` exista (es decir, haber
-   corrido `main_TFM.R` al menos una vez antes); no hace falta que sea en
-   la misma sesión de R, porque el propio script carga lo que le falte.
+## Correspondencia entre salidas y memoria
 
-## Archivos que se generan
+| Archivo en `resultados/tablas/` | Memoria |
+|---|---|
+| `tabla_disponibilidad_historica.csv` | Anexo A |
+| `tabla_3_3_ventanas.csv` | Tabla 4.1 y Fig. 3.3 |
+| `tabla_correlacion_variables.csv` | Tabla 4.2 |
+| `tabla_codo_silueta.csv` | Tabla 4.3 y Anexo E |
+| `tabla_centroides.csv` | Tabla 4.4 |
+| `tabla_asignaciones_cluster.csv` | Anexo B |
+| `tabla_evaluacion_expectativas.csv` | Apartado 4.4 |
+| `tabla_composicion_desarrollo.csv`, `tabla_composicion_region.csv`, `tabla_cluster_vs_perfil.csv` | Tablas 4.5 y 4.6, Fig. 4.5 |
+| `tabla_cambio_entre_particiones.csv` | Tabla 4.7 |
+| `tabla_migracion_entre_fases.csv` | Tabla 4.8, Fig. 4.6 y Anexo C |
+| `tabla_resumen_reaccion_recuperacion.csv` | Tabla 4.9 |
+| `tabla_reaccion_recuperacion.csv` | Anexo D |
+| `tabla_contexto_crisis.csv` | Tabla 4.10 |
+| `tabla_separabilidad.csv` | Apartado 4.8 |
+| `comprobacion_semillas.csv` | Apartado 3.8 |
+| `tabla_diagnostico_ventana_movil.csv` | Apartado 3.5 (observaciones por ventana) |
 
-- En `basedata/`: un CSV por ticker y la tabla de equivalencia.
-- En `data/`: los objetos intermedios `.rds`.
-- En `resultados/tablas/`: disponibilidad histórica, ventanas, correlación
-  entre variables, codo y silueta, centroides, asignaciones, contraste de
-  hipótesis, cambio entre particiones, migración, separabilidad,
-  reacción-recuperación y comprobación de semillas (`seedCheck.R`).
-- En `resultados/figuras/`: ventanas temporales (Figura 3.3), codo y
-  silueta (Figura 3.4), precios relativos, mapas de clusters por crisis y
-  migración entre fases.
+## Notas metodológicas
 
-## Cómo forzar una nueva descarga
-
-La descarga reutiliza los CSV de `basedata/` si son válidos y cubren el
-periodo. Para volver a descargar, borrar el CSV correspondiente o llamar a
-`descargarActivo(ticker, refrescar = TRUE)` (o `descargarUniverso(tickers,
-refrescar = TRUE)`).
-
-## Decisiones metodológicas pendientes
-
-- **Perfil estructural externo (Tabla 3.6).** El nivel de desarrollo
-  (clasificación de FTSE Russell) y la región geográfica (esquema M49 de
-  Naciones Unidas) son datos externos que se cumplimentan en
-  `profiles/perfil_estructural.csv`. Sin ellos, la caracterización
-  estructural de los grupos queda pendiente; el resto del análisis se
-  ejecuta igualmente.
-- **Número de clusters común.** `main_TFM.R` lo calcula a partir del codo
-  y la silueta y lo asigna a `K_COMUN`. Conviene confirmar ese valor a la
-  vista de la Figura 3.4 antes de dar los resultados por definitivos.
-- **DAX e Ibovespa.** Sus tickers (`^GDAXI`, `^BVSP`) corresponden a
-  índices de retorno total, frente a los índices de precios del resto. Se
-  conserva la especificación original; una eventual sustitución o prueba
-  de sensibilidad se decidirá más adelante. Cambiar un ticker se hace solo
-  en `config.R`.
-- **Cobertura de FTSEMIB.MI.** El bloque de disponibilidad comprueba si
-  todos los índices cubren 2008. Si alguno no lo hace, el análisis se
-  detiene y pide una decisión expresa, porque excluir un índice altera la
-  muestra de 20 definida en el Word.
+- **Ventana móvil.** La volatilidad y la correlación media se calculan
+  sobre una ventana retrospectiva de tres meses naturales aplicada al panel
+  de fechas comunes (unas cuarenta observaciones de media).
+- **Anualización.** Se emplea un factor de 252 sesiones. Como el
+  agrupamiento se realiza sobre variables estandarizadas, este factor actúa
+  solo como escala y no influye en los grupos.
+- **DAX y Bovespa.** Sus tickers (`^GDAXI`, `^BVSP`) corresponden a
+  índices de rentabilidad total, frente a los índices de precios del resto;
+  la memoria (apartado 4.8) señala que los resultados no muestran un
+  comportamiento común entre ambos que pueda relacionarse claramente con
+  esta diferencia.
+- **Empate en la alineación de etiquetas.** En la crisis de 2022, dos
+  correspondencias entre la fase anterior y la aguda dejan el mismo número
+  de mercados en su grupo; el desempate por el índice de Jaccard se informa
+  por consola durante la ejecución.

@@ -3,7 +3,7 @@
 #
 # Autora: Cristina Mongil de la Cal
 #
-# Comprobacion de robustez de la inicializacion de K-Means (Word 3.8).
+# Comprobacion de la inicializacion de K-Means con semillas alternativas (memoria 3.8).
 # El agrupamiento de la fase aguda de cada crisis se repite con semillas
 # alternativas a la fijada en config.R (SEMILLA = 123), manteniendo el
 # resto de parametros del analisis (mismo k comun, mismo nstart, mismas

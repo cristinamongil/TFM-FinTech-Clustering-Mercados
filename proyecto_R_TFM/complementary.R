@@ -4,10 +4,10 @@
 # Autora: Cristina Mongil de la Cal
 #
 # Analisis complementarios que enriquecen las conclusiones sin alterar el
-# enfoque exploratorio (Word 3.11, Tabla 3.7): cambio entre particiones,
-# migracion entre fases, separabilidad y
-# sensibles, reaccion y recuperacion, y comportamiento de los activos de
-# contexto (todo ello estrictamente descriptivo).
+# enfoque exploratorio (memoria 3.11, Tabla 3.7): cambio entre particiones,
+# migracion entre fases, separabilidad, reaccion y recuperacion, y
+# comportamiento de los activos de contexto (todo ello estrictamente
+# descriptivo).
 
 # ---------------------------------------------------------------------
 # cambioEntreParticiones()
@@ -39,7 +39,8 @@ cambioEntreParticiones <- function(res_crisis) {
 # migracionEntreFases()
 # Para cada crisis, sigue la etiqueta de cada indice en las tres fases.
 # Las etiquetas de "antes" y "despues" se alinean con las de "durante" por
-# coincidencia de los mercados que integran cada grupo, para que sean
+# coincidencia de los mercados que integran cada grupo (con desempate por
+# el indice de Jaccard, vease alinearEtiquetas()), para que sean
 # comparables entre fases. Devuelve la tabla de
 # pertenencia y el numero de cambios de grupo por indice.
 # Entradas: res_crisis_fase (salida de ejecutarKMeans(por="crisis_fase"))
@@ -93,14 +94,19 @@ separabilidadGrupos <- function(res_crisis) {
 
 # ---------------------------------------------------------------------
 # reaccionRecuperacion()
-# Descriptivo, por indice y crisis: fecha en que la caida desde el maximo
-# previo supera un umbral, fecha del drawdown maximo, y dias hasta recobrar
-# un porcentaje de la caida dentro de la fase posterior. Los mercados que
-# no recuperan ese nivel se marcan como no recuperados. No se afirma
-# relacion causal entre mercados.
+# Descriptivo, por indice y crisis, sobre el tramo que va del pico de la
+# crisis (inicio de la fase aguda) al final de la fase posterior:
+#  - reaccion: primera fecha en que el indice cae un 10 % o mas respecto al
+#    maximo que ha alcanzado desde el pico, y dias naturales desde el pico;
+#  - drawdown maximo del tramo y fecha del minimo;
+#  - recuperacion: dias naturales desde el minimo hasta recobrar el 50 % de
+#    la caida, siempre antes del final de la fase posterior (puede ocurrir
+#    ya dentro de la fase aguda). Los mercados que no la alcanzan se marcan
+#    como no recuperados.
+# No se afirma relacion causal entre mercados.
 # Entradas: panel_precios, ventanas, umbral_caida, pct_recuperacion
-# Salida:   data.frame crisis, indice, fecha_umbral, fecha_min, dd_maximo,
-#           dias_recuperacion, recuperado
+# Salida:   data.frame crisis, indice, fecha_umbral, dias_reaccion,
+#           fecha_min, dd_maximo, dias_recuperacion, recuperado
 # ---------------------------------------------------------------------
 reaccionRecuperacion <- function(panel_precios, ventanas,
                                  umbral_caida = UMBRAL_CAIDA,
@@ -127,12 +133,37 @@ reaccionRecuperacion <- function(panel_precios, ventanas,
       filas[[length(filas) + 1]] <- data.frame(
         crisis = cr, indice = idx,
         fecha_umbral = if (!is.na(i_umbral)) f[i_umbral] else as.Date(NA),
+        dias_reaccion = if (!is.na(i_umbral)) as.integer(f[i_umbral] - ini_aguda) else NA_integer_,
         fecha_min = f[i_min], dd_maximo = round(dd_max, 3),
         dias_recuperacion = dias_rec, recuperado = recuperado,
         stringsAsFactors = FALSE)
     }
   }
   res <- do.call(rbind, filas); rownames(res) <- NULL; res
+}
+
+# ---------------------------------------------------------------------
+# resumenReaccionRecuperacion()
+# Agregados por crisis de la tabla anterior (Tabla 4.9 de la memoria):
+# drawdown medio y peor drawdown, mediana de dias hasta la reaccion,
+# mercados recuperados y mediana de dias de recuperacion (calculada solo
+# sobre los mercados que recuperan el 50 % de la caida).
+# Entradas: tabla_reaccion (salida de reaccionRecuperacion())
+# Salida:   data.frame por crisis
+# ---------------------------------------------------------------------
+resumenReaccionRecuperacion <- function(tabla_reaccion) {
+  do.call(rbind, lapply(unique(tabla_reaccion$crisis), function(cr) {
+    d <- tabla_reaccion[tabla_reaccion$crisis == cr, ]
+    data.frame(
+      crisis                 = cr,
+      drawdown_medio         = round(mean(d$dd_maximo), 3),
+      peor_drawdown          = round(min(d$dd_maximo), 3),
+      mediana_dias_reaccion  = stats::median(d$dias_reaccion, na.rm = TRUE),
+      recuperados            = sum(d$recuperado),
+      n_mercados             = nrow(d),
+      mediana_dias_recuperacion = stats::median(d$dias_recuperacion[d$recuperado]),
+      stringsAsFactors = FALSE)
+  }))
 }
 
 # ---------------------------------------------------------------------

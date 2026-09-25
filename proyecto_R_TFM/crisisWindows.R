@@ -3,7 +3,7 @@
 #
 # Autora: Cristina Mongil de la Cal
 #
-# Definicion de las crisis y sus ventanas temporales (Word 3.3). La fase
+# Definicion de las crisis y sus ventanas temporales (memoria 3.3). La fase
 # aguda se delimita del maximo previo (pico) al minimo (valle) sobre una
 # serie de referencia construida como la media equiponderada de los
 # indices en precios normalizados. Las fases anterior y posterior son de

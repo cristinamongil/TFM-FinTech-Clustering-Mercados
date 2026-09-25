@@ -4,7 +4,7 @@
 # Autora: Cristina Mongil de la Cal
 #
 # Variables que describen el comportamiento de cada indice y que se
-# emplean como entradas del clustering (Word 3.5, Tabla 3.4):
+# emplean como entradas del clustering (memoria 3.5, Tabla 3.4):
 #   - rentabilidad anualizada
 #   - volatilidad realizada anualizada (ventana movil)
 #   - drawdown maximo

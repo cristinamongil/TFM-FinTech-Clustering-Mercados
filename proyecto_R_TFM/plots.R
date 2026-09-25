@@ -6,12 +6,12 @@
 # Figuras del proyecto, siguiendo el patron ggplot2 + reshape2 del proyecto
 # de clase. Cada funcion devuelve un objeto ggplot que main_TFM.R guarda
 # con guardarFigura(). Los nombres de archivo se corresponden con las
-# figuras del Word.
+# figuras de la memoria.
 
 # ---------------------------------------------------------------------
 # graficarVentanas()
-# Serie de referencia con las ventanas de cada crisis sombreadas y los
-# picos y valles marcados (Figura 3.3).
+# Serie de referencia con la fase aguda de cada crisis sombreada, entre su
+# pico y su valle (Figura 3.3).
 # ---------------------------------------------------------------------
 graficarVentanas <- function(referencia, ventanas) {
   agudas <- ventanas[ventanas$fase == "durante", ]
@@ -21,8 +21,6 @@ graficarVentanas <- function(referencia, ventanas) {
                                     ymin = -Inf, ymax = Inf),
                        fill = "grey80", alpha = 0.5) +
     ggplot2::geom_line(color = "steelblue") +
-    ggplot2::geom_point(data = agudas, inherit.aes = FALSE,
-                        ggplot2::aes(x = fecha_pico, y = NA_real_), na.rm = TRUE) +
     ggplot2::labs(x = NULL, y = "Referencia (base 100)",
                   title = "Serie de referencia y fases agudas de las crisis") +
     ggplot2::theme_minimal()
